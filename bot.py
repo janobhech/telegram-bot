@@ -1,4 +1,4 @@
-from telegram import Update
+ffrom telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
 TOKEN = "8790640164:AAF4l-SBZIY9sVB1BgtgE2KtKils3IRmOGA"
@@ -15,5 +15,5 @@ app = ApplicationBuilder().token(TOKEN).build()
 app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-if__name__=="__main__":
-    app.run_polling(drop_pending_updates=True)
+if__name__ == "__main__":
+    app.run_polling()
