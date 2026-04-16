@@ -1,7 +1,7 @@
 import telebot
 
 # BotFather bergan tokenni shu yerga qo'ying
-TOKEN = 'SIZNING_TOKENINGIZ_SHU_YERDA'
+TOKEN = '8790640164:AAF4l-SBZIY9sVB1BgtgE2KtKils3IRmOGA'
 bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
