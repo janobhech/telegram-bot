@@ -18,7 +18,7 @@ def keep_alive():
 
 # 2. Bot sozlamalari
 # O'zingizning TOKENingizni qo'yishni unutmang!
-TOKEN = "8790640164:AAF4l-SBZIY9sVB1BgtgE2KtKils3IRmOGA" 
+TOKEN = "8790640164:AAF4l-SBZIY9sVB1BgtgE2KtKils3IRmOGA"
 bot = telebot.TeleBot(TOKEN)
 
 # Asosiy Menyu (Tugmalar)
