@@ -1,6 +1,6 @@
 pyTelegramBotAPI
 flask
-[17.04.2026 17:59] Ilyoz bek: import telebot
+import telebot
 import os
 from flask import Flask
 from threading import Thread
