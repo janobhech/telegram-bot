@@ -1,4 +1,4 @@
-[17.04.2026 17:57] Ilyoz bek: pyTelegramBotAPI
+pyTelegramBotAPI
 flask
 [17.04.2026 17:59] Ilyoz bek: import telebot
 import os
