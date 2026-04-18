@@ -1,46 +1,61 @@
+import os
 import telebot
 import google.generativeai as genai
 from flask import Flask
-from threading import Thread
-import os
 
-# 1. MAXFIY MA'LUMOTLARNI TIZIMDAN OLISH
-# Bu nomlar Render'dagi "Key" ustunidagi nomlar bilan bir xil bo'lishi shart
+# 1. SETTINGS & TOKENS
+# Render'dagi Environment Variables bo'limidan olinadi
 GEMINI_API_KEY = os.getenv("GEMINI_KEY")
 TELEGRAM_TOKEN = os.getenv("BOT_TOKEN")
 
-# AI va Botni sozlash
+# Bot va Gemini'ni sozlash
+bot = telebot.TeleBot(TELEGRAM_TOKEN)
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
-bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# 2. RENDER UCHUN SERVER (O'chib qolmasligi uchun)
-app = Flask('')
+# Render uchun kichik Flask server (Portni band qilish uchun)
+app = Flask(name)
+
 @app.route('/')
-def home():
-    return "Bot Online ✅"
+def index():
+    return "Bot ishlamoqda..."
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-
-# 3. BOT FUNKSIYALARI
+# 2. BOT COMMANDS
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    bot.reply_to(message, "Assalomu alaykum! Savolingizni yozing, men yuridik AI yordamchingizman.")
+    bot.reply_to(message, "Assalomu alaykum! Men Gemini AI bilan ishlaydigan yuridik yordamchingizman. Savolingizni bering.")
 
+# 3. MESSAGE HANDLING
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     try:
+        # Foydalanuvchi savoli Gemini'ga yuboriladi
         prompt = f"O'zbekiston qonunchiligi asosida javob ber: {message.text}"
         response = model.generate_content(prompt)
-        bot.reply_to(message, response.text)
+        
+        if response.text:
+            bot.reply_to(message, response.text)
+        else:
+            bot.reply_to(message, "Kechirasiz, javob topilmadi.")
+            
     except Exception as e:
-        bot.reply_to(message, "Hozircha javob bera olmayman. Render'dagi Environment Variables'ni tekshiring.")
+        # Xatoni aniq ko'rish uchun (faqat tuzatish davrida)
+        bot.reply_to(message, f"Texnik xato yuz berdi: {str(e)}")
 
-if __name__ =="__main__":
-    keep_alive()
+# 4. RUNNING THE BOT
+if name == "main":
+    # Render portini avtomatik aniqlash
+    port = int(os.environ.get("PORT", 8080))
+    
+    # Botni alohida oqimda emas, polling rejimida ishga tushirish
+    print("Bot ishga tushdi...")
+    
+    # Flaskni fonda yurgizish (ixtiyoriy, Render uchun)
+    from threading import Thread
+    def run_flask():
+        app.run(host='0.0.0.0', port=port)
+    
+    Thread(target=run_flask).start()
+    
+    # Telegram polling
     bot.infinity_polling()
