@@ -14,7 +14,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Render uchun kichik Flask server (Portni band qilish uchun)
-app = Flask(name)
+app = Flask(__name__)
 
 @app.route('/')
 def index():
