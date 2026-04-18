@@ -11,7 +11,7 @@ TELEGRAM_TOKEN = os.getenv("BOT_TOKEN")
 # Bot va Gemini'ni sozlash
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('models/gemini-1.5-flash')
 # Render uchun kichik Flask server (Portni band qilish uchun)
 app = Flask(__name__)
 
