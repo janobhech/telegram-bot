@@ -4,26 +4,21 @@ from flask import Flask
 from threading import Thread
 import os
 
-# --- 1. SOZLAMALAR ---
-# Google AI Studiodan olgan API kalitingizni shu yerga qo'ying
-GEMINI_API_KEY = "SIZNING_GEMINI_API_KALITINGIZ"
+# 1. MAXFIY MA'LUMOTLARNI TIZIMDAN OLISH
+# Bu nomlar Render'dagi "Key" ustunidagi nomlar bilan bir xil bo'lishi shart
+GEMINI_API_KEY = os.getenv("GEMINI_KEY")
+TELEGRAM_TOKEN = os.getenv("BOT_TOKEN")
 
-# BotFatherdan olgan Telegram tokenni shu yerga qo'ying
-TELEGRAM_TOKEN = "8790640164:AAF4l-SBZIY9sVB1BgtgE2KtKils3IRmOGA"
-
-# AI Modelini ulash
+# AI va Botni sozlash
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel('gemini-1.5-flash')
-
-# Telegram botni ishga tushirish
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# --- 2. RENDER UCHUN SERVER (Bot o'chib qolmasligi uchun) ---
+# 2. RENDER UCHUN SERVER (O'chib qolmasligi uchun)
 app = Flask('')
-
 @app.route('/')
 def home():
-    return "Bot Online va Xavfsiz ✅"
+    return "Bot Online ✅"
 
 def run():
     app.run(host='0.0.0.0', port=8080)
@@ -32,39 +27,20 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# --- 3. BOT BUYRUQLARI ---
-
+# 3. BOT FUNKSIYALARI
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    # Bu yerda faqat sizning xabaringiz turadi
-    welcome_text = (
-        "Assalomu alaykum! 👋\n\n"
-        "Men yuridik yordamchi AI botman. Savolingizni yozing, "
-        "men O'zbekiston qonunchiligi asosida javob berishga harakat qilaman."
-    )
-    bot.reply_to(message, welcome_text)
+    bot.reply_to(message, "Assalomu alaykum! Savolingizni yozing, men yuridik AI yordamchingizman.")
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     try:
-        # AIga yuboriladigan savol
-        user_query = message.text
-        
-        # AIga qat'iy yuridik vazifa beramiz
-        prompt = f"Sen professional o'zbek yuristisan. Faqat O'zbekiston qonunlari va Lex.uz asosida javob ber: {user_query}"
-        
-        # AI javobi
+        prompt = f"O'zbekiston qonunchiligi asosida javob ber: {message.text}"
         response = model.generate_content(prompt)
-        
-        # Foydalanuvchiga javobni qaytarish
         bot.reply_to(message, response.text)
-        
     except Exception as e:
-        print(f"Xatolik yuz berdi: {e}")
-        bot.reply_to(message, "Kechirasiz, hozirda javob bera olmayman. Birozdan so'ng qayta urinib ko'ring.")
+        bot.reply_to(message, "Hozircha javob bera olmayman. Render'dagi Environment Variables'ni tekshiring.")
 
-# --- 4. ISHGA TUSHIRISH ---
-if __name__ == "__main__":
-    keep_alive() # Serverni yoqish
-    print("Bot muvaffaqiyatli ishga tushdi...")
-    bot.infinity_polling() # Botni doimiy aloqada saqlash
+if __name__ =="__main__":
+    keep_alive()
+    bot.infinity_polling()
