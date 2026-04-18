@@ -43,7 +43,7 @@ def handle_message(message):
         bot.reply_to(message, f"Texnik xato yuz berdi: {str(e)}")
 
 # 4. RUNNING THE BOT
-if name == "main":
+if __name__=="__main__":
     # Render portini avtomatik aniqlash
     port = int(os.environ.get("PORT", 8080))
     
