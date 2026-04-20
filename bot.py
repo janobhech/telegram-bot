@@ -3,13 +3,17 @@ import telebot
 import google.generativeai as genai
 from flask import Flask
 
-# 1. Serverdagi kalitlarni o'qish
+# 1. Serverdagi kalitlarni o'qish (Environment Variables)
 GEMINI_KEY = os.getenv("GEMINI_KEY")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# 2. Gemini-ni sozlash (404 xatosini oldini olish uchun models/ qo'shilgan)
+# 2. Gemini-ni SOZLASH (Xatoni yo'qotuvchi qism)
 genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('models/gemini-1.5-flash')
+
+# Bu yerda modelni aniq v1 versiyasi bilan chaqiramiz
+model = genai.GenerativeModel(
+    model_name='gemini-1.5-flash'
+)
 
 bot = telebot.TeleBot(BOT_TOKEN)
 app = Flask(__name__)
@@ -18,7 +22,7 @@ app = Flask(__name__)
 def index():
     return "Bot ishlamoqda..."
 
-# 3. Bot buyruqlari
+# 3. Telegram buyruqlari
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.reply_to(message, "Assalomu alaykum! Men Gemini AI botman. Savolingizni yozing.")
@@ -26,10 +30,12 @@ def start(message):
 @bot.message_handler(func=lambda message: True)
 def chat(message):
     try:
+        # Gemini-dan javob olish
         response = model.generate_content(message.text)
         bot.reply_to(message, response.text)
     except Exception as e:
-        bot.reply_to(message, f"Xato yuz berdi: {str(e)}")
+        # Agar xato bo'lsa, uni ko'rsatish
+        bot.reply_to(message, f"Texnik xato: {str(e)}")
 
 if __name__=="__main__":
     # Botni ishga tushirish
