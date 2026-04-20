@@ -4,20 +4,20 @@ from google import genai
 from flask import Flask
 import threading
 
-# 1. Kalitlarni olish
+# 1. Serverdagi Environment Variables (Kalitlar)ni o'qish
 GEMINI_KEY = os.getenv("GEMINI_KEY")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-# 2. Yangi Gemini ulanishi (Xatosiz variant)
+# 2. Gemini API ulanishi (Yangi kutubxona)
 client = genai.Client(api_key=GEMINI_KEY)
 bot = telebot.TeleBot(BOT_TOKEN)
-app = Flask(__name_)
+app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return "Bot ishlamoqda..."
+    return "Bot status: Active"
 
-# 3. Bot mantiqi
+# 3. Telegram bot buyruqlari
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.reply_to(message, "Assalomu alaykum! Men Gemini AI botman. Savolingizni yozing.")
@@ -25,7 +25,7 @@ def start(message):
 @bot.message_handler(func=lambda message: True)
 def chat(message):
     try:
-        # Yangi uslubda so'rov yuborish
+        # Gemini modelidan javob olish
         response = client.models.generate_content(
             model='gemini-1.5-flash',
             contents=message.text
@@ -34,13 +34,15 @@ def chat(message):
     except Exception as e:
         bot.reply_to(message, f"Xato yuz berdi: {str(e)}")
 
-# Render uchun parallel server
+# 4. Render serveri o'chib qolmasligi uchun parallel funksiya
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
     app.run(host='0.0.0.0', port=port)
 
-if __name__=="__naim__":
-    # Flaskni orqa fonda ishga tushirish
-    threading.Thread(target=run_flask).start()
+if __name__=="__main__":
+    # Flask serverni orqa fonda ishga tushirish
+    threading.Thread(target=run_flask, daemon=True).start()
+    
     print("Bot ishga tushdi...")
+    # Botni ishga tushirish (Polling)
     bot.infinity_polling()
