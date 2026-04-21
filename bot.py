@@ -20,7 +20,7 @@ def keep_alive():
     t.start()
 
 # 2. TELEGRAM BOT QISMI
-TOKEN = 'SIZNING_BOT_TOKENINGIZ' # <--- Tokeningizni shu yerga qo'ying
+TOKEN = os.environ.get('TOKEN')
 bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
