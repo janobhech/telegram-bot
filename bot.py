@@ -5,7 +5,7 @@ from flask import Flask
 import threading
 import time
 
-# 1. Kalitlar
+# 1. Kalitlar (Render Environment Variables'dan olinadi)
 GEMINI_KEY = os.getenv("GEMINI_KEY")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -17,7 +17,7 @@ def index():
     return "Bot status: Online"
 
 def get_gemini_response(text):
-    # Eng yangi flash modelini sinab ko'ramiz
+    # Eng yangi va barqaror model versiyasi
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
     headers = {'Content-Type': 'application/json'}
     data = {"contents": [{"parts": [{"text": text}]}]}
@@ -26,23 +26,18 @@ def get_gemini_response(text):
         response = requests.post(url, headers=headers, json=data)
         result = response.json()
         
-        # 1. Muvaffaqiyatli javob kelsa
+        # Muvaffaqiyatli javob kelsa
         if "candidates" in result:
             return result["candidates"][0]["content"]["parts"][0]["text"]
         
-        # 2. Google xato qaytarsa (Diagnostika qismi)
+        # Agar Google xato qaytarsa, aniq sababini ko'rsatadi
         elif "error" in result:
-            err_msg = result['error']['message']
-            if "location is not supported" in err_msg.lower():
-                return "❌ MINTAQAVIY CHEKLOV: Render serveri joylashgan hududda Google Gemini ishlamaydi. Server hududini (Region) o'zgartirib ko'ring."
-            if "API key not valid" in err_msg:
-                return "❌ API KEY XATOSI: Google AI Studio'dan olingan kalit noto'g'ri yoki Render'ga noto'g'ri kiritilgan."
-            return f"❌ GOOGLE XATOSI: {err_msg}"
+            return f"❌ Google API Xatosi: {result['error']['message']}"
             
-        return f"❌ NOMA'LUM XATO: {str(result)}"
+        return f"❌ Noma'lum xato yuz berdi: {str(result)}"
         
     except Exception as e:
-        return f"❌ ULANISH XATOSI: {str(e)}"
+        return f"❌ Ulanishda xato: {str(e)}"
 
 @bot.message_handler(func=lambda message: True)
 def chat(message):
@@ -55,12 +50,14 @@ def run_flask():
     app.run(host='0.0.0.0', port=port)
 
 if __name__=="__main__":
-    threading.Thread(target=run_flask).start()
-    print("Veb-server tayyor...")
+    # Render uchun veb-serverni ishga tushirish
+    threading.Thread(target=run_flask, daemon=True).start()
+    print("Veb-server ishga tushdi...")
     
-    # Conflict xatosini yengish uchun takroriy urinish
+    # Conflict (409) xatosini chetlab o'tish uchun
     while True:
         try:
             bot.infinity_polling(skip_pending=True)
-        except:
+        except Exception as e:
+            print(f"Polling xatosi: {e}")
             time.sleep(5)
