@@ -5,7 +5,7 @@ from flask import Flask
 import threading
 import time
 
-# 1. Kalitlar (Render-dagi Environment Variables-dan oladi)
+# Kalitlar
 GEMINI_KEY = os.getenv("GEMINI_KEY")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
@@ -17,23 +17,30 @@ def index():
     return "Bot status: Online"
 
 def get_gemini_response(text):
-    # Sizning rasmda ko'ringan model nomi
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_KEY}"
-    headers = {'Content-Type': 'application/json'}
-    data = {"contents": [{"parts": [{"text": text}]}]}
+    # Rasmda ko'ringan modelni birinchi bo'lib sinab ko'ramiz
+    models_to_try = [
+        "gemini-2.5-flash",
+        "gemini-1.5-flash",
+        "gemini-pro"
+    ]
     
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        result = response.json()
+    for model in models_to_try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_KEY}"
+        headers = {'Content-Type': 'application/json'}
+        data = {"contents": [{"parts": [{"text": text}]}]}
         
-        if "candidates" in result:
-            return result["candidates"][0]["content"]["parts"][0]["text"]
-        elif "error" in result:
-            # Agar Google 2.5-ni hali API-da "topilmadi" desa, 1.5-ni sinab ko'radi
-            return f"Google xatosi: {result['error']['message']}"
-        return "Javob olishda xatolik yuz berdi."
-    except Exception as e:
-        return f"Ulanish xatosi: {str(e)}"
+        try:
+            response = requests.post(url, headers=headers, json=data)
+            result = response.json()
+            
+            if "candidates" in result:
+                return result["candidates"][0]["content"]["parts"][0]["text"]
+            # Agar model topilmasa, keyingisiga o'tadi
+            continue
+        except:
+            continue
+            
+    return "❌ Xato: Google modellari ulanishni rad etdi. API kalitni tekshiring."
 
 @bot.message_handler(func=lambda message: True)
 def chat(message):
@@ -47,9 +54,8 @@ def run_flask():
 
 if __name__=="__main__":
     threading.Thread(target=run_flask, daemon=True).start()
-    
     while True:
         try:
             bot.infinity_polling(skip_pending=True)
-        except Exception as e:
+        except:
             time.sleep(5)
